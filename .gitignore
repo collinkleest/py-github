@@ -130,3 +130,7 @@ dmypy.json
 
 # credentials
 secrets.json
+token.key
+
+# npm / node stuff
+/node_modules/

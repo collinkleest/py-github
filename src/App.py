@@ -1,60 +1,33 @@
-# imports
+#-- imports --#
 import requests as req
 import json
 import os
+import sys
 
-# global variables
-ROOT_API = "https://api.github.com"
-SAVE_CREDENTIALS = False
-
-
-def activeCredenitalsPresent():
-    if(os.path.exists("data/secrets.json")):
-        with open('data/secrets.json') as file:
-            data = json.load(file)
-            if(checkAuth(data['userName'], data['token'])):
-                return True
-            else:
-                return False
+#-- class imports --#
+from Auth import Auth
+from Options import Options
 
 
-def checkAuth(uName, token):
-    r = req.get(ROOT_API + '/user', auth=(uName, token))
-    if (r.status_code == 200):
-        return True
-    else:
-        return False
+class App:
+
+    def __init__(self):
+        self.authObject = Auth()
+        self.credentials = self.authObject.authenticate()
+
+    def deleteCredentials(self):
+        if not (self.authObject.SAVE_CREDENTIALS):
+            if (os.path.exists('data/secrets.json')):
+                os.remove('data/secrets.json')
 
 
-def authenticate():
-    authenticated = False
-
-    if(activeCredenitalsPresent()):
-        authenticated = True
-
-    while not authenticated:
-        userName = str(input("Username: ")).strip()
-        token = str(input("Token: ")).strip()
-        r = req.get(ROOT_API + '/user', auth=(userName, token))
-        if (r.status_code == 200):
-            authenticated = True
-            credentials = {
-                "userName": userName,
-                "token": token
-            }
-            with open('data/secrets.json', 'w') as outfile:
-                json.dump(credentials, outfile)
-            save = str(
-                input("Would you like your credentials saved for later (y/n):"))
-            save = save.lower().strip()
-            if (save == 'y' or save == 'yes'):
-                print('saving your credentials')
-            else:
-                print("Credentials will be delted after session")
-        else:
-            print('failed to autheticate')
-            print("status:", r.status_code)
-            print("response:", r.json())
-
-
-authenticate()
+if __name__ == "__main__":
+    app = App()
+    app.deleteCredentials()
+    while True:
+        try:
+            optionsObject = Options(
+                app.credentials['userName'], app.credentials['token'])
+        except KeyboardInterrupt:
+            print("bye")
+            sys.exit()
